@@ -103,7 +103,7 @@ if(NOT BOOST_STANDALONE)
 
   # Compilation options required by all platforms
   target_compile_definitions(
-    Boost::boost
+    boost
     INTERFACE $<$<CONFIG:Release>:BOOST_DISABLE_ASSERT>
               BOOST_ASIO_NO_DEPRECATED
               BOOST_SYSTEM_NO_DEPRECATED
@@ -111,8 +111,8 @@ if(NOT BOOST_STANDALONE)
               BOOST_THREAD_USES_CHRONO
               BOOST_THREAD_PROVIDES_EXECUTORS
   )
-  add_library(Boost::asio ALIAS Boost::boost)
-  target_link_libraries(Boost::boost INTERFACE Threads::Threads)
+  add_library(Boost::asio ALIAS boost)
+  target_link_libraries(boost INTERFACE Threads::Threads)
 endif()
 
 if(USE_ANDROID)
