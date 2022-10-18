@@ -1,8 +1,13 @@
-cmake_minimum_required(VERSION 3.16...3.23)
+cmake_minimum_required(VERSION 3.20...3.24)
 
 project(Boost-CMake LANGUAGES C CXX VERSION 1.79.0)
 
 option(BOOST_DISABLE_TESTS "Do not build test targets, even if building standalone" OFF)
+
+# ---- Add dependencies via CPM ----
+# see https://github.com/TheLartians/CPM.cmake for more info
+
+include(cmake/CPM.cmake)
 
 if(EXISTS "$ENV{CPM_SOURCE_CACHE}/boost_1_79_0")
   set(FETCHCONTENT_SOURCE_DIR_BOOST "$ENV{CPM_SOURCE_CACHE}/boost_1_79_0" CACHE PATH "Boost source DIR")
@@ -44,6 +49,8 @@ configure_file(cmake/Modules/ccache.cmake ${BOOST_SOURCE}/tools/cmake/include/cc
 
 set_property(GLOBAL PROPERTY USE_FOLDERS TRUE)
 
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+
 if(USE_ANDROID)
   # CMake 3.7.1 doesn't define the target triple for the ASM language,
   # resulting in all files compiled for the host architecture
@@ -83,7 +90,7 @@ set(BOOST_LIBS_OPTIONAL
     timer
     type_erasure
     wave
-    CACHE STRING "Boost libs to be compiled"
+    CACHE STRING "Boost libs to be compiled" FORCE
 )
 
 foreach(lib ${BOOST_LIBS_REQUIRED})
@@ -119,3 +126,32 @@ if(USE_ANDROID)
   # Android doesn't support thread local storage through compiler intrinsics
   target_compile_definitions(Boost::boost INTERFACE BOOST_ASIO_DISABLE_THREAD_KEYWORD_EXTENSION)
 endif()
+
+if(CMAKE_SKIP_INSTALL_RULES)
+  return()
+endif()
+
+# ---- Install rules ----
+
+# PackageProject.cmake will be used to make our target installable
+CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.9.0")
+
+if(BOOST_STANDALONE)
+  message(STATUS "BOOST_STANDALONE")
+  set(BOOST_LIBS ${BOOST_LIBS_OPTIONAL})
+  list(REMOVE_ITEM BOOST_LIBS test graph_parallel)
+  install(TARGETS ${BOOST_LIBS} Boost_locale_deps EXPORT boostTargets)
+endif()
+
+packageProject(
+  NAME boost
+  VERSION ${BOOST_VERSION}
+  NAMESPACE Boost
+  BINARY_DIR ${PROJECT_BINARY_DIR}
+  INCLUDE_DIR ${BOOST_SOURCE}/boost
+  INCLUDE_DESTINATION include/boost
+  COMPATIBILITY SameMajorVersion
+  DEPENDENCIES "Threads"
+)
+
+include(CPack)

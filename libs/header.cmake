@@ -4,7 +4,7 @@ add_library(Boost::headers ALIAS boost)
 
 include(GNUInstallDirs)
 
-target_include_directories(boost SYSTEM INTERFACE
+target_include_directories(boost INTERFACE
      $<BUILD_INTERFACE:${BOOST_SOURCE}>
      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )

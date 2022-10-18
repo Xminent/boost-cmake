@@ -13,10 +13,10 @@ _add_boost_lib(
 if(BOOST_IOSTREAMS_ENABLE_BZIP2)
   find_package(BZip2)
   if(BZIP2_FOUND)
-    target_sources(Boost_iostreams PRIVATE
+    target_sources(iostreams PRIVATE
       ${BOOST_SOURCE}/libs/iostreams/src/bzip2.cpp
     )
-    target_link_libraries(Boost_iostreams PRIVATE
+    target_link_libraries(iostreams PRIVATE
       BZip2::BZip2
     )
   endif()
@@ -25,11 +25,11 @@ endif()
 if(BOOST_IOSTREAMS_ENABLE_ZLIB)
   find_package(ZLIB)
   if(ZLIB_FOUND)
-    target_sources(Boost_iostreams PRIVATE
+    target_sources(iostreams PRIVATE
       ${BOOST_SOURCE}/libs/iostreams/src/gzip.cpp
       ${BOOST_SOURCE}/libs/iostreams/src/zlib.cpp
     )
-    target_link_libraries(Boost_iostreams PRIVATE
+    target_link_libraries(iostreams PRIVATE
       ZLIB::ZLIB
     )
   endif()

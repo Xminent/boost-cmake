@@ -65,4 +65,4 @@ _add_boost_lib(
   SOURCES
     ${math_srcs}
 )
-target_include_directories(Boost_math PRIVATE ${BOOST_SOURCE}/libs/math/src/tr1)
+target_include_directories(math PRIVATE ${BOOST_SOURCE}/libs/math/src/tr1)
