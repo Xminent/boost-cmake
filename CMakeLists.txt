@@ -124,7 +124,7 @@ endif()
 
 if(USE_ANDROID)
   # Android doesn't support thread local storage through compiler intrinsics
-  target_compile_definitions(Boost::boost INTERFACE BOOST_ASIO_DISABLE_THREAD_KEYWORD_EXTENSION)
+  target_compile_definitions(boost INTERFACE BOOST_ASIO_DISABLE_THREAD_KEYWORD_EXTENSION)
 endif()
 
 if(CMAKE_SKIP_INSTALL_RULES)
@@ -139,7 +139,15 @@ CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.9.0")
 if(BOOST_STANDALONE)
   message(STATUS "BOOST_STANDALONE")
   set(BOOST_LIBS ${BOOST_LIBS_OPTIONAL})
-  list(REMOVE_ITEM BOOST_LIBS test graph_parallel)
+  list(REMOVE_ITEM BOOST_LIBS test)
+  list(APPEND BOOST_LIBS unit_test_framework)
+  if(NOT TARGET mpi)
+    list(REMOVE_ITEM BOOST_LIBS graph_parallel)
+  endif()
+  if(NOT MPI_CXX_FOUND)
+    list(REMOVE_ITEM BOOST_LIBS mpi)
+  endif()
+
   install(TARGETS ${BOOST_LIBS} Boost_locale_deps EXPORT boostTargets)
 endif()
 
@@ -149,7 +157,8 @@ packageProject(
   NAMESPACE Boost
   BINARY_DIR ${PROJECT_BINARY_DIR}
   INCLUDE_DIR ${BOOST_SOURCE}/boost
-  INCLUDE_DESTINATION include/boost
+  INCLUDE_DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/boost
+  DISABLE_VERSION_SUFFIX YES
   COMPATIBILITY SameMajorVersion
   DEPENDENCIES "Threads"
 )
