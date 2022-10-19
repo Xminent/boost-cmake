@@ -1,4 +1,4 @@
-if(NOT TARGET Boost_mpi)
+if(NOT TARGET mpi)
   return()
 endif()
 
