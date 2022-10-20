@@ -33,8 +33,8 @@ if(NOT Boost_POPULATED)
 endif()
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
-include(CheckBoostVersion)
 
+include(CheckBoostVersion)
 message(STATUS "Boost found: ${BOOST_VERSION} ${BOOST_SOURCE}")
 
 include(StandaloneBuild)
@@ -47,8 +47,11 @@ include(AddBoostTest)
 configure_file(cmake/CMakeLists.txt.in ${BOOST_SOURCE}/CMakeLists.txt @ONLY)
 configure_file(cmake/Modules/ccache.cmake ${BOOST_SOURCE}/tools/cmake/include/ccache.cmake COPYONLY)
 
+# NOTE: Use the FOLDER target property to organize targets into folders.
 set_property(GLOBAL PROPERTY USE_FOLDERS TRUE)
 
+# ensure that the debug and release builds use different names for the libraries that will be installed.
+set(CMAKE_DEBUG_POSTFIX -d)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 if(USE_ANDROID)
@@ -72,13 +75,13 @@ set(BOOST_LIBS_OPTIONAL
     fiber
     filesystem
     graph
-    graph_parallel
     iostreams
     json
     locale
     log
     math
     mpi
+    graph_parallel # TODO(CK) does this realy depends on mpi?
     program_options
     #python # complex module
     random
@@ -160,7 +163,7 @@ packageProject(
   INCLUDE_DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/boost
   DISABLE_VERSION_SUFFIX YES
   COMPATIBILITY SameMajorVersion
-  DEPENDENCIES "Threads"
+  DEPENDENCIES "Threads" # TODO(CK): variable list needed for: BZIP2; Iconf; ICU; MPI; ZLIB
 )
 
 include(CPack)

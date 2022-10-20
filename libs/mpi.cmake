@@ -1,4 +1,4 @@
-find_package(MPI QUIET)
+find_package(MPI)
 
 if(NOT MPI_CXX_FOUND)
   return()
