@@ -56,10 +56,10 @@ _add_boost_lib(
 
 # Convenience interface library to link deps to both main library and tests
 add_library(Boost_locale_deps INTERFACE)
-target_link_libraries(Boost_locale PRIVATE Boost_locale_deps)
+target_link_libraries(locale PRIVATE Boost_locale_deps)
 
 if(BOOST_LOCALE_ENABLE_ICU_BACKEND AND ICU_FOUND)
-  target_sources(Boost_locale PRIVATE
+  target_sources(locale PRIVATE
     ${BOOST_SOURCE}/libs/locale/src/icu/boundary.cpp
     ${BOOST_SOURCE}/libs/locale/src/icu/codecvt.cpp
     ${BOOST_SOURCE}/libs/locale/src/icu/collator.cpp
@@ -80,7 +80,7 @@ if(BOOST_LOCALE_ENABLE_ICU_BACKEND AND ICU_FOUND)
 endif()
 
 if(BOOST_LOCALE_ENABLE_STD_BACKEND)
-  target_sources(Boost_locale PRIVATE
+  target_sources(locale PRIVATE
     ${BOOST_SOURCE}/libs/locale/src/std/codecvt.cpp
     ${BOOST_SOURCE}/libs/locale/src/std/collate.cpp
     ${BOOST_SOURCE}/libs/locale/src/std/converter.cpp
@@ -99,7 +99,7 @@ if(BOOST_LOCALE_ENABLE_ICONV_BACKEND AND ICONV_FOUND)
 endif()
 
 if(BOOST_LOCALE_ENABLE_WINAPI_BACKEND)
-  target_sources(Boost_locale PRIVATE
+  target_sources(locale PRIVATE
     ${BOOST_SOURCE}/libs/locale/src/win32/collate.cpp
     ${BOOST_SOURCE}/libs/locale/src/win32/converter.cpp
     ${BOOST_SOURCE}/libs/locale/src/win32/numeric.cpp
@@ -110,7 +110,7 @@ else()
 endif()
 
 if(BOOST_LOCALE_ENABLE_POSIX_BACKEND)
-  target_sources(Boost_locale PRIVATE
+  target_sources(locale PRIVATE
     ${BOOST_SOURCE}/libs/locale/src/posix/collate.cpp
     ${BOOST_SOURCE}/libs/locale/src/posix/converter.cpp
     ${BOOST_SOURCE}/libs/locale/src/posix/numeric.cpp
@@ -122,7 +122,7 @@ else()
 endif()
 
 if(USE_WINDOWS AND (BOOST_LOCALE_ENABLE_WINAPI_BACKEND OR BOOST_LOCALE_ENABLE_STD_BACKEND))
-  target_sources(Boost_locale PRIVATE
+  target_sources(locale PRIVATE
     ${BOOST_SOURCE}/libs/locale/src/win32/lcid.cpp
   )
 endif()
@@ -130,7 +130,7 @@ endif()
 if(BOOST_LOCALE_ENABLE_POSIX_BACKEND
   OR BOOST_LOCALE_ENABLE_STD_BACKEND
   OR BOOST_LOCALE_ENABLE_WINAPI_BACKEND)
-  target_sources(Boost_locale PRIVATE
+  target_sources(locale PRIVATE
     ${BOOST_SOURCE}/libs/locale/src/util/gregorian.cpp
   )
 endif()

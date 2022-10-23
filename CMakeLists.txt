@@ -1,8 +1,13 @@
-cmake_minimum_required(VERSION 3.16...3.23)
+cmake_minimum_required(VERSION 3.20...3.24)
 
 project(Boost-CMake LANGUAGES C CXX VERSION 1.79.0)
 
 option(BOOST_DISABLE_TESTS "Do not build test targets, even if building standalone" OFF)
+
+# ---- Add dependencies via CPM ----
+# see https://github.com/TheLartians/CPM.cmake for more info
+
+include(cmake/CPM.cmake)
 
 if(EXISTS "$ENV{CPM_SOURCE_CACHE}/boost_1_79_0")
   set(FETCHCONTENT_SOURCE_DIR_BOOST "$ENV{CPM_SOURCE_CACHE}/boost_1_79_0" CACHE PATH "Boost source DIR")
@@ -28,8 +33,8 @@ if(NOT Boost_POPULATED)
 endif()
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
-include(CheckBoostVersion)
 
+include(CheckBoostVersion)
 message(STATUS "Boost found: ${BOOST_VERSION} ${BOOST_SOURCE}")
 
 include(StandaloneBuild)
@@ -42,7 +47,12 @@ include(AddBoostTest)
 configure_file(cmake/CMakeLists.txt.in ${BOOST_SOURCE}/CMakeLists.txt @ONLY)
 configure_file(cmake/Modules/ccache.cmake ${BOOST_SOURCE}/tools/cmake/include/ccache.cmake COPYONLY)
 
+# NOTE: Use the FOLDER target property to organize targets into folders.
 set_property(GLOBAL PROPERTY USE_FOLDERS TRUE)
+
+# ensure that the debug and release builds use different names for the libraries that will be installed.
+set(CMAKE_DEBUG_POSTFIX -d)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 if(USE_ANDROID)
   # CMake 3.7.1 doesn't define the target triple for the ASM language,
@@ -65,13 +75,13 @@ set(BOOST_LIBS_OPTIONAL
     fiber
     filesystem
     graph
-    graph_parallel
     iostreams
     json
     locale
     log
     math
     mpi
+    graph_parallel # TODO(CK) does this realy depends on mpi?
     program_options
     #python # complex module
     random
@@ -83,7 +93,7 @@ set(BOOST_LIBS_OPTIONAL
     timer
     type_erasure
     wave
-    CACHE STRING "Boost libs to be compiled"
+    CACHE STRING "Boost libs to be compiled" FORCE
 )
 
 foreach(lib ${BOOST_LIBS_REQUIRED})
@@ -103,7 +113,7 @@ if(NOT BOOST_STANDALONE)
 
   # Compilation options required by all platforms
   target_compile_definitions(
-    Boost::boost
+    boost
     INTERFACE $<$<CONFIG:Release>:BOOST_DISABLE_ASSERT>
               BOOST_ASIO_NO_DEPRECATED
               BOOST_SYSTEM_NO_DEPRECATED
@@ -111,11 +121,49 @@ if(NOT BOOST_STANDALONE)
               BOOST_THREAD_USES_CHRONO
               BOOST_THREAD_PROVIDES_EXECUTORS
   )
-  add_library(Boost::asio ALIAS Boost::boost)
-  target_link_libraries(Boost::boost INTERFACE Threads::Threads)
+  add_library(Boost::asio ALIAS boost)
+  target_link_libraries(boost INTERFACE Threads::Threads)
 endif()
 
 if(USE_ANDROID)
   # Android doesn't support thread local storage through compiler intrinsics
-  target_compile_definitions(Boost::boost INTERFACE BOOST_ASIO_DISABLE_THREAD_KEYWORD_EXTENSION)
+  target_compile_definitions(boost INTERFACE BOOST_ASIO_DISABLE_THREAD_KEYWORD_EXTENSION)
 endif()
+
+if(CMAKE_SKIP_INSTALL_RULES)
+  return()
+endif()
+
+# ---- Install rules ----
+
+# PackageProject.cmake will be used to make our target installable
+CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.9.0")
+
+if(BOOST_STANDALONE)
+  message(STATUS "BOOST_STANDALONE")
+  set(BOOST_LIBS ${BOOST_LIBS_OPTIONAL})
+  list(REMOVE_ITEM BOOST_LIBS test)
+  list(APPEND BOOST_LIBS unit_test_framework)
+  if(NOT TARGET mpi)
+    list(REMOVE_ITEM BOOST_LIBS graph_parallel)
+  endif()
+  if(NOT MPI_CXX_FOUND)
+    list(REMOVE_ITEM BOOST_LIBS mpi)
+  endif()
+
+  install(TARGETS ${BOOST_LIBS} Boost_locale_deps EXPORT boostTargets)
+endif()
+
+packageProject(
+  NAME boost
+  VERSION ${BOOST_VERSION}
+  NAMESPACE Boost
+  BINARY_DIR ${PROJECT_BINARY_DIR}
+  INCLUDE_DIR ${BOOST_SOURCE}/boost
+  INCLUDE_DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/boost
+  DISABLE_VERSION_SUFFIX YES
+  COMPATIBILITY SameMajorVersion
+  DEPENDENCIES "Threads" # TODO(CK): variable list needed for: BZIP2; Iconf; ICU; MPI; ZLIB
+)
+
+include(CPack)

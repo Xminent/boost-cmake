@@ -10,13 +10,13 @@ _add_boost_lib(
 )
 if(NOT USE_WINDOWS)
   find_package(Threads)
-  target_link_libraries(Boost_chrono PRIVATE Threads::Threads)
+  target_link_libraries(chrono PRIVATE Threads::Threads)
 
   find_library(RT_LIBRARY
     NAMES rt
     DOC "rt library"
   )
   if(RT_LIBRARY)
-    target_link_libraries(Boost_chrono PRIVATE ${RT_LIBRARY})
+    target_link_libraries(chrono PRIVATE ${RT_LIBRARY})
   endif()
 endif()
