@@ -11,9 +11,9 @@ _add_boost_test(
     Boost::unit_test_framework
   TESTS
     RUN ${BOOST_SOURCE}/libs/random/test/histogram.cpp
-# TODO Fails to compile. Cannot find boost::mpl::list correctly
-#    RUN ${BOOST_SOURCE}/libs/random/test/multiprecision_float_test.cpp
-#    RUN ${BOOST_SOURCE}/libs/random/test/multiprecision_int_test.cpp
+    # TODO Fails to compile. Cannot find boost::mpl::list correctly
+    # RUN ${BOOST_SOURCE}/libs/random/test/multiprecision_float_test.cpp
+    # RUN ${BOOST_SOURCE}/libs/random/test/multiprecision_int_test.cpp
     # RUN ${BOOST_SOURCE}/libs/random/test/statistic_tests.cpp
     RUN ${BOOST_SOURCE}/libs/random/test/test_bernoulli.cpp
     RUN ${BOOST_SOURCE}/libs/random/test/test_bernoulli_distribution.cpp
@@ -48,15 +48,17 @@ _add_boost_test(
     RUN ${BOOST_SOURCE}/libs/random/test/test_knuth_b.cpp
     RUN ${BOOST_SOURCE}/libs/random/test/test_kreutzer1986.cpp
     RUN ${BOOST_SOURCE}/libs/random/test/test_lagged_fibonacci.cpp
-    RUN ${BOOST_SOURCE}/libs/random/test/test_lagged_fibonacci1279.cpp
-    RUN ${BOOST_SOURCE}/libs/random/test/test_lagged_fibonacci19937.cpp
-    RUN ${BOOST_SOURCE}/libs/random/test/test_lagged_fibonacci2281.cpp
-    RUN ${BOOST_SOURCE}/libs/random/test/test_lagged_fibonacci23209.cpp
-    RUN ${BOOST_SOURCE}/libs/random/test/test_lagged_fibonacci3217.cpp
-    RUN ${BOOST_SOURCE}/libs/random/test/test_lagged_fibonacci4423.cpp
-    RUN ${BOOST_SOURCE}/libs/random/test/test_lagged_fibonacci44497.cpp
     RUN ${BOOST_SOURCE}/libs/random/test/test_lagged_fibonacci607.cpp
-    RUN ${BOOST_SOURCE}/libs/random/test/test_lagged_fibonacci9689.cpp
+    # NOTE: Disabled by default.
+    # These don't add much and the larger ones can overflow the stack.
+    # RUN ${BOOST_SOURCE}/libs/random/test/test_lagged_fibonacci1279.cpp
+    # RUN ${BOOST_SOURCE}/libs/random/test/test_lagged_fibonacci2281.cpp
+    # RUN ${BOOST_SOURCE}/libs/random/test/test_lagged_fibonacci3217.cpp
+    # RUN ${BOOST_SOURCE}/libs/random/test/test_lagged_fibonacci4423.cpp
+    # RUN ${BOOST_SOURCE}/libs/random/test/test_lagged_fibonacci9689.cpp
+    # RUN ${BOOST_SOURCE}/libs/random/test/test_lagged_fibonacci19937.cpp
+    # RUN ${BOOST_SOURCE}/libs/random/test/test_lagged_fibonacci23209.cpp
+    # RUN ${BOOST_SOURCE}/libs/random/test/test_lagged_fibonacci44497.cpp
     RUN ${BOOST_SOURCE}/libs/random/test/test_laplace.cpp
     RUN ${BOOST_SOURCE}/libs/random/test/test_laplace_distribution.cpp
     RUN ${BOOST_SOURCE}/libs/random/test/test_linear_feedback_shift.cpp

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20...3.24)
+cmake_minimum_required(VERSION 3.21...3.24)
 
 project(Boost-CMake LANGUAGES C CXX VERSION 1.79.0)
 
@@ -108,7 +108,7 @@ foreach(lib ${BOOST_LIBS_OPTIONAL})
 endforeach()
 
 # TODO: Move those to option() calls in the right file
-if(NOT BOOST_STANDALONE)
+if(NOT PROJECT_IS_TOP_LEVEL)
   find_package(Threads)
 
   # Compilation options required by all platforms
@@ -125,6 +125,10 @@ if(NOT BOOST_STANDALONE)
   target_link_libraries(boost INTERFACE Threads::Threads)
 endif()
 
+if(USE_APPLE)
+  target_compile_definitions(boost INTERFACE BOOST_BIND_GLOBAL_PLACEHOLDERS)
+endif()
+
 if(USE_ANDROID)
   # Android doesn't support thread local storage through compiler intrinsics
   target_compile_definitions(boost INTERFACE BOOST_ASIO_DISABLE_THREAD_KEYWORD_EXTENSION)
@@ -139,8 +143,8 @@ endif()
 # PackageProject.cmake will be used to make our target installable
 CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.9.0")
 
-if(BOOST_STANDALONE)
-  message(STATUS "BOOST_STANDALONE")
+if(PROJECT_IS_TOP_LEVEL)
+  message(STATUS "PROJECT_IS_TOP_LEVEL")
   set(BOOST_LIBS ${BOOST_LIBS_OPTIONAL})
   list(REMOVE_ITEM BOOST_LIBS test)
   list(APPEND BOOST_LIBS unit_test_framework)
