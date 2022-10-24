@@ -126,7 +126,9 @@ if(NOT PROJECT_IS_TOP_LEVEL)
 endif()
 
 if(USE_APPLE)
+  # TODO(CK): too many deprectated warnings!
   target_compile_definitions(boost INTERFACE BOOST_BIND_GLOBAL_PLACEHOLDERS)
+  target_compile_options(boost INTERFACE -Wno-deprecated-declarations)
 endif()
 
 if(USE_ANDROID)
