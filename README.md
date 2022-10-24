@@ -1,47 +1,79 @@
-# Boost CMake [![Build Status](https://dev.azure.com/Orphis/boost-cmake/_apis/build/status/Orphis.boost-cmake?branchName=master)](https://dev.azure.com/Orphis/boost-cmake/_build/latest?definitionId=1?branchName=master)
+# Boost CMake [![CMake](https://github.com/ClausKlein/boost-cmake/actions/workflows/cmake.yml/badge.svg)](https://github.com/ClausKlein/boost-cmake/actions/workflows/cmake.yml)
 
 ## Synopsis
 
 Easy Boost integration in CMake projects!
 
+Only the boost libraries and their dependencies you link to your targets are build!
+
 ## Code Example
 
-Install the submodule in your project structure:
-```
-git submodule add https://github.com/Orphis/boost-cmake.git
-```
-Use it! In your CMakeLists.txt file:
+Add it to your project with [CPM.cmake](https://github.com/cpm-cmake/CPM.cmake)
+in your CMakeLists.txt file:
 
 ```
-add_subdirectory(boost-cmake)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+
+# to get CMAKE_INSTALL_INCLUDEDIR
+include(GNUInstallDirs)
+
+include(cmake/CPM.cmake)
+
+# PackageProject.cmake will be used to make our target installable
+CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.9.0")
+
+option(BUILD_SHARED_LIBS "Build shared libraries" NO)
+CPMAddPackage("gh:ClausKlein/boost-cmake@1.79.3")
+
+target_include_directories(
+  ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+                         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 ...
+
 target_link_libraries(lib_using_filesystem PUBLIC Boost::filesystem)
 target_link_libraries(lib_using_header_only PUBLIC Boost::boost)
 ```
 
 ## Configuration
 
-Boost will automatically be downloaded from https://boostorg.jfrog.io/artifactory !
+Boost will automatically be downloaded from https://boostorg.jfrog.io/artifactory/main/release/ !
 
-If that is not acceptable to you, you can use an alternate Boost version, apply custom patches or just mirror the current archive in your internal network like so:
+If that is not acceptable to you, you can use an alternate Boost version, apply
+custom patches or just mirror the current archive in your internal network like so:
 ```
 set(BOOST_URL http://internal.mirror/boost.7z)
 set(BOOST_URL_SHA256 foobar)
-add_subdirectory(boost-cmake)
-```
-
-For more advanced configuration, you can override the way to download the sources using [FetchContent_Declare](https://cmake.org/cmake/help/latest/module/FetchContent.html):
-```
-FetchContent_Declare(
-  Boost
-  SVN_REPOSITORY "svn+ssh://svn.company.com/boost"
-)
 ```
 
 If you have Boost sources already available and want to point to them, you can use the following:
 ```
 set(FETCHCONTENT_SOURCE_DIR_BOOST /path/to/boost)
 add_subdirectory(boost-cmake)
+```
+
+For more advanced configuration, you may want to install your project depending on boost libraries
+using [PackageProject](https://github.com/TheLartians/PackageProject.cmake) i.e.:
+```
+if(CMAKE_SKIP_INSTALL_RULES)
+  return()
+endif()
+
+install(TARGETS filesystem serialization EXPORT boostTargets)
+
+packageProject(
+  NAME ${PROJECT_NAME}
+  VERSION ${PROJECT_VERSION}
+  NAMESPACE ${PROJECT_NAME}
+  BINARY_DIR ${PROJECT_BINARY_DIR}
+  INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include
+  INCLUDE_DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
+  INCLUDE_HEADER_PATTERN "*.h"
+  DISABLE_VERSION_SUFFIX YES
+  COMPATIBILITY SameMajorVersion
+  DEPENDENCIES "Boost 1.79"
+)
+
+include(CPack)
 ```
 
 ## Motivation
