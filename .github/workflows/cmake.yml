@@ -10,10 +10,17 @@ on:
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
+  CTEST_OUTPUT_ON_FAILURE: 1
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+
+      matrix:
+        os: [macos, ubuntu, windows]
+
+    runs-on: ${{ matrix.os }}-latest
 
     steps:
       - uses: actions/checkout@v3
