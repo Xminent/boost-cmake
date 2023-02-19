@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21...3.24)
 
-project(Boost-CMake LANGUAGES C CXX VERSION 1.79.0)
+project(Boost-CMake LANGUAGES C CXX VERSION 1.80.0)
 
 option(BOOST_DISABLE_TESTS "Do not build test targets, even if building standalone" OFF)
 
@@ -9,15 +9,15 @@ option(BOOST_DISABLE_TESTS "Do not build test targets, even if building standalo
 
 include(cmake/CPM.cmake)
 
-if(EXISTS "$ENV{CPM_SOURCE_CACHE}/boost_1_79_0")
-  set(FETCHCONTENT_SOURCE_DIR_BOOST "$ENV{CPM_SOURCE_CACHE}/boost_1_79_0" CACHE PATH "Boost source DIR")
+if(EXISTS "$ENV{CPM_SOURCE_CACHE}/boost_1_80_0")
+  set(FETCHCONTENT_SOURCE_DIR_BOOST "$ENV{CPM_SOURCE_CACHE}/boost_1_80_0" CACHE PATH "Boost source DIR")
   set(CPM_Boost_SOURCE ${FETCHCONTENT_SOURCE_DIR_BOOST} CACHE PATH "Manual override")
 endif()
 
-set(BOOST_URL "https://boostorg.jfrog.io/artifactory/main/release/1.79.0/source/boost_1_79_0.tar.bz2"
+set(BOOST_URL "https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.tar.bz2"
     CACHE STRING "Boost download URL"
 )
-set(BOOST_URL_SHA256 "475d589d51a7f8b3ba2ba4eda022b170e562ca3b760ee922c146b6c65856ef39"
+set(BOOST_URL_SHA256 "1e19565d82e43bc59209a168f5ac899d3ba471d55c7610c677d4ccf2c9c500c0"
     CACHE STRING "Boost download URL SHA256 checksum"
 )
 
@@ -30,6 +30,20 @@ if(NOT Boost_POPULATED)
   FetchContent_Populate(Boost)
   message(STATUS "Fetching Boost - done")
   set(BOOST_SOURCE ${boost_SOURCE_DIR})
+  find_package(Patch)
+  if(Patch_FOUND)
+    message("Patch found: ${Patch_EXECUTABLE}")
+    message("Patching Boost")
+    execute_process(
+      COMMAND ${Patch_EXECUTABLE} -N -p1 -i ${CMAKE_CURRENT_SOURCE_DIR}/patches/${PROJECT_VERSION}/filesystem-01.patch
+      WORKING_DIRECTORY ${BOOST_SOURCE}/libs/filesystem COMMAND_ECHO STDOUT # XXX COMMAND_ERROR_IS_FATAL LAST
+    )
+    execute_process(
+      COMMAND ${Patch_EXECUTABLE} -R -p1 -i ${CMAKE_CURRENT_SOURCE_DIR}/patches/${PROJECT_VERSION}/date_time-02.patch
+      WORKING_DIRECTORY ${BOOST_SOURCE}/libs/date_time COMMAND_ECHO STDOUT # XXX COMMAND_ERROR_IS_FATAL LAST
+    )
+    message("Patching Boost - done")
+  endif()
 endif()
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
@@ -93,7 +107,7 @@ set(BOOST_LIBS_OPTIONAL
     timer
     type_erasure
     wave
-    CACHE STRING "Boost libs to be compiled" FORCE
+    CACHE STRING "Boost libs to be compiled"
 )
 
 foreach(lib ${BOOST_LIBS_REQUIRED})
@@ -125,10 +139,17 @@ if(NOT PROJECT_IS_TOP_LEVEL)
   target_link_libraries(boost INTERFACE Threads::Threads)
 endif()
 
-if(USE_APPLE)
-  # TODO(CK): too many deprectated warnings!
-  target_compile_definitions(boost INTERFACE BOOST_BIND_GLOBAL_PLACEHOLDERS)
-  target_compile_options(boost INTERFACE -Wno-deprecated-declarations)
+target_compile_definitions(boost INTERFACE BOOST_BIND_GLOBAL_PLACEHOLDERS)
+
+if(UNIX)
+  if(USE_APPLE)
+    # TODO(CK): too many deprectated warnings!
+    # intrusive/pointer_rebind.hpp:81:35: warning: 'rebind<std::pair<const int, int>>' is deprecated
+    # fiber/future/async.hpp:57 'result_of<void (*())()>' is deprecated
+    target_compile_options(boost INTERFACE -Wno-deprecated-declarations)
+  else()
+    target_compile_definitions(boost INTERFACE BOOST_NO_AUTO_PTR)
+  endif()
 endif()
 
 if(USE_ANDROID)
@@ -157,7 +178,12 @@ if(PROJECT_IS_TOP_LEVEL)
     list(REMOVE_ITEM BOOST_LIBS mpi)
   endif()
 
-  install(TARGETS ${BOOST_LIBS} Boost_locale_deps EXPORT boostTargets)
+  if(ICONV_FOUND)
+    install(TARGETS Boost_locale_deps EXPORT boostTargets)
+  else()
+    list(REMOVE_ITEM BOOST_LIBS locale)
+  endif()
+  install(TARGETS ${BOOST_LIBS} EXPORT boostTargets)
 endif()
 
 packageProject(
