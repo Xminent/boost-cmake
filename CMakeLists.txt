@@ -1,8 +1,10 @@
-cmake_minimum_required(VERSION 3.21...3.24)
+cmake_minimum_required(VERSION 3.21...3.26)
 
 project(Boost-CMake LANGUAGES C CXX VERSION 1.80.0)
 
-option(BOOST_DISABLE_TESTS "Do not build test targets, even if building standalone" OFF)
+if(NOT PROJECT_IS_TOP_LEVEL)
+  option(BOOST_DISABLE_TESTS "Do not build test targets, even if building standalone" ON)
+endif()
 
 # ---- Add dependencies via CPM ----
 # see https://github.com/TheLartians/CPM.cmake for more info
@@ -39,7 +41,7 @@ if(NOT Boost_POPULATED)
       WORKING_DIRECTORY ${BOOST_SOURCE}/libs/filesystem COMMAND_ECHO STDOUT # XXX COMMAND_ERROR_IS_FATAL LAST
     )
     execute_process(
-      COMMAND ${Patch_EXECUTABLE} -R -p1 -i ${CMAKE_CURRENT_SOURCE_DIR}/patches/${PROJECT_VERSION}/date_time-02.patch
+      COMMAND ${Patch_EXECUTABLE} -N -p1 -i ${CMAKE_CURRENT_SOURCE_DIR}/patches/${PROJECT_VERSION}/date_time-02.patch
       WORKING_DIRECTORY ${BOOST_SOURCE}/libs/date_time COMMAND_ECHO STDOUT # XXX COMMAND_ERROR_IS_FATAL LAST
     )
     message("Patching Boost - done")
