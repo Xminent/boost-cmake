@@ -32,20 +32,28 @@ if(NOT Boost_POPULATED)
   FetchContent_Populate(Boost)
   message(STATUS "Fetching Boost - done")
   set(BOOST_SOURCE ${boost_SOURCE_DIR})
-  find_package(Patch)
-  if(Patch_FOUND)
-    message("Patch found: ${Patch_EXECUTABLE}")
-    message("Patching Boost")
-    execute_process(
-      COMMAND ${Patch_EXECUTABLE} -N -p1 -i ${CMAKE_CURRENT_SOURCE_DIR}/patches/${PROJECT_VERSION}/filesystem-01.patch
-      WORKING_DIRECTORY ${BOOST_SOURCE}/libs/filesystem COMMAND_ECHO STDOUT # XXX COMMAND_ERROR_IS_FATAL LAST
-    )
-    execute_process(
-      COMMAND ${Patch_EXECUTABLE} -N -p1 -i ${CMAKE_CURRENT_SOURCE_DIR}/patches/${PROJECT_VERSION}/date_time-02.patch
-      WORKING_DIRECTORY ${BOOST_SOURCE}/libs/date_time COMMAND_ECHO STDOUT # XXX COMMAND_ERROR_IS_FATAL LAST
-    )
-    message("Patching Boost - done")
+
+  if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/patches/${PROJECT_VERSION})
+    find_package(Patch)
+    if(Patch_FOUND)
+      message("Patch found: ${Patch_EXECUTABLE}")
+      message("Patching Boost")
+      execute_process(
+        COMMAND ${Patch_EXECUTABLE} -N -p1 -i ${CMAKE_CURRENT_SOURCE_DIR}/patches/${PROJECT_VERSION}/filesystem-01.patch
+        WORKING_DIRECTORY ${BOOST_SOURCE}/libs/filesystem COMMAND_ECHO STDOUT
+      )
+      execute_process(
+        COMMAND ${Patch_EXECUTABLE} -N -p2 -i ${CMAKE_CURRENT_SOURCE_DIR}/patches/${PROJECT_VERSION}/date_time-01.patch
+        WORKING_DIRECTORY ${BOOST_SOURCE} COMMAND_ECHO STDOUT
+      )
+      execute_process(
+        COMMAND ${Patch_EXECUTABLE} -N -R -p1 -i ${CMAKE_CURRENT_SOURCE_DIR}/patches/${PROJECT_VERSION}/date_time-02.patch
+        WORKING_DIRECTORY ${BOOST_SOURCE}/libs/date_time COMMAND_ECHO STDOUT
+      )
+      message("Patching Boost - done")
+    endif()
   endif()
+
 endif()
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
