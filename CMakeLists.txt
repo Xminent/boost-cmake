@@ -1,9 +1,20 @@
-cmake_minimum_required(VERSION 3.21...3.26)
+cmake_minimum_required(VERSION 3.16)
 
 project(Boost-CMake LANGUAGES C CXX VERSION 1.80.0)
 
-if(NOT PROJECT_IS_TOP_LEVEL)
-  option(BOOST_DISABLE_TESTS "Do not build test targets, even if building standalone" ON)
+option(BOOST_INSTALL "Install Boost" OFF)
+option(BOOST_DISABLE_TESTS "Do not build test targets, even if building standalone" ON)
+
+set(PROJECT_IS_TOP_LEVEL OFF)
+
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
+  message(FATAL_ERROR
+            "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there."
+  )
+endif()
+
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+  set(PROJECT_IS_TOP_LEVEL ON)
 endif()
 
 # ---- Add dependencies via CPM ----
@@ -23,37 +34,22 @@ set(BOOST_URL_SHA256 "1e19565d82e43bc59209a168f5ac899d3ba471d55c7610c677d4ccf2c9
     CACHE STRING "Boost download URL SHA256 checksum"
 )
 
-include(FetchContent)
-FetchContent_Declare(Boost URL ${BOOST_URL} URL_HASH SHA256=${BOOST_URL_SHA256})
+CPMAddPackage(NAME boost-impl URL ${BOOST_URL} URL_HASH SHA256=${BOOST_URL_SHA256} DOWNLOAD_ONLY ON)
 
-FetchContent_GetProperties(Boost)
-if(NOT Boost_POPULATED)
-  message(STATUS "Fetching Boost")
-  FetchContent_Populate(Boost)
-  message(STATUS "Fetching Boost - done")
-  set(BOOST_SOURCE ${boost_SOURCE_DIR})
-
-  if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/patches/${PROJECT_VERSION})
-    find_package(Patch)
-    if(Patch_FOUND)
-      message("Patch found: ${Patch_EXECUTABLE}")
-      message("Patching Boost")
-      execute_process(
-        COMMAND ${Patch_EXECUTABLE} -N -p1 -i ${CMAKE_CURRENT_SOURCE_DIR}/patches/${PROJECT_VERSION}/filesystem-01.patch
-        WORKING_DIRECTORY ${BOOST_SOURCE}/libs/filesystem COMMAND_ECHO STDOUT
-      )
-      execute_process(
-        COMMAND ${Patch_EXECUTABLE} -N -p2 -i ${CMAKE_CURRENT_SOURCE_DIR}/patches/${PROJECT_VERSION}/date_time-01.patch
-        WORKING_DIRECTORY ${BOOST_SOURCE} COMMAND_ECHO STDOUT
-      )
-      execute_process(
-        COMMAND ${Patch_EXECUTABLE} -N -R -p1 -i ${CMAKE_CURRENT_SOURCE_DIR}/patches/${PROJECT_VERSION}/date_time-02.patch
-        WORKING_DIRECTORY ${BOOST_SOURCE}/libs/date_time COMMAND_ECHO STDOUT
-      )
-      message("Patching Boost - done")
-    endif()
-  endif()
-
+set(BOOST_SOURCE ${boost-impl_SOURCE_DIR})
+find_package(Patch)
+if(Patch_FOUND)
+  message("Patch found: ${Patch_EXECUTABLE}")
+  message("Patching Boost")
+  execute_process(
+    COMMAND ${Patch_EXECUTABLE} -N -p1 -i ${CMAKE_CURRENT_SOURCE_DIR}/patches/${PROJECT_VERSION}/filesystem-01.patch
+    WORKING_DIRECTORY ${BOOST_SOURCE}/libs/filesystem COMMAND_ECHO STDOUT # XXX COMMAND_ERROR_IS_FATAL LAST
+  )
+  execute_process(
+    COMMAND ${Patch_EXECUTABLE} -N -p1 -i ${CMAKE_CURRENT_SOURCE_DIR}/patches/${PROJECT_VERSION}/date_time-02.patch
+    WORKING_DIRECTORY ${BOOST_SOURCE}/libs/date_time COMMAND_ECHO STDOUT # XXX COMMAND_ERROR_IS_FATAL LAST
+  )
+  message("Patching Boost - done")
 endif()
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules)
@@ -176,8 +172,7 @@ endif()
 # PackageProject.cmake will be used to make our target installable
 CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.9.0")
 
-if(PROJECT_IS_TOP_LEVEL)
-  message(STATUS "PROJECT_IS_TOP_LEVEL")
+if(BOOST_INSTALL)
   set(BOOST_LIBS ${BOOST_LIBS_OPTIONAL})
   list(REMOVE_ITEM BOOST_LIBS test)
   list(APPEND BOOST_LIBS unit_test_framework)
