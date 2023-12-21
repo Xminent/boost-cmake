@@ -22,19 +22,20 @@ endif()
 
 include(cmake/CPM.cmake)
 
-if(EXISTS "$ENV{CPM_SOURCE_CACHE}/boost_1_80_0")
-  set(FETCHCONTENT_SOURCE_DIR_BOOST "$ENV{CPM_SOURCE_CACHE}/boost_1_80_0" CACHE PATH "Boost source DIR")
+if(EXISTS "$ENV{CPM_SOURCE_CACHE}/boost-impl")
   set(CPM_Boost_SOURCE ${FETCHCONTENT_SOURCE_DIR_BOOST} CACHE PATH "Manual override")
 endif()
 
-set(BOOST_URL "https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.tar.bz2"
+set(BOOST_URL "https://boostorg.jfrog.io/artifactory/main/release/1.84.0/source/boost_1_84_0.tar.bz2"
     CACHE STRING "Boost download URL"
 )
-set(BOOST_URL_SHA256 "1e19565d82e43bc59209a168f5ac899d3ba471d55c7610c677d4ccf2c9c500c0"
+set(BOOST_URL_SHA256 "cc4b893acf645c9d4b698e9a0f08ca8846aa5d6c68275c14c3e7949c24109454"
     CACHE STRING "Boost download URL SHA256 checksum"
 )
 
 CPMAddPackage(NAME boost-impl URL ${BOOST_URL} URL_HASH SHA256=${BOOST_URL_SHA256} DOWNLOAD_ONLY ON)
+
+set(CPM_Boost_SOURCE ${boost-impl_SOURCE_DIR} CACHE PATH "Manual override")
 
 set(BOOST_SOURCE ${boost-impl_SOURCE_DIR})
 find_package(Patch)
@@ -112,6 +113,7 @@ set(BOOST_LIBS_OPTIONAL
     thread
     timer
     type_erasure
+    url
     wave
     CACHE STRING "Boost libs to be compiled"
 )
